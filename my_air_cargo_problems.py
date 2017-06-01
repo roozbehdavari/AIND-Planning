@@ -360,4 +360,4 @@ def air_cargo_p3():
             expr('At(C4, SFO)'),
             ]
 
-    return AirCargoProblem(cargos,planes, aiports, init, goal)
+    return AirCargoProblem(cargos, planes, aiports, init, goal)

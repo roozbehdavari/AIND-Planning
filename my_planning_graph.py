@@ -18,7 +18,7 @@ class PgNode():
         self.children = set()
         self.mutex = set()
 
-    def is_mutex(self, other) -> bool:
+    def is_mutex(self, other):
         """Boolean test for mutual exclusion
 
         :param other: PgNode
@@ -56,7 +56,7 @@ class PgNode_s(PgNode):
         negative.
     """
 
-    def __init__(self, symbol: str, is_pos: bool):
+    def __init__(self, symbol, is_pos):
         """S-level Planning Graph node constructor
 
         :param symbol: expr
@@ -106,7 +106,7 @@ class PgNode_a(PgNode):
     """A-type (action) Planning Graph node - inherited from PgNode """
 
 
-    def __init__(self, action: Action):
+    def __init__(self, action):
         """A-level Planning Graph node constructor
 
         :param action: Action
@@ -183,7 +183,7 @@ class PgNode_a(PgNode):
         return self.__hash
 
 
-def mutexify(node1: PgNode, node2: PgNode):
+def mutexify(node1, node2):
     """ adds sibling nodes to each other's mutual exclusion (mutex) set. These should be sibling nodes!
 
     :param node1: PgNode (or inherited PgNode_a, PgNode_s types)
@@ -203,7 +203,7 @@ class PlanningGraph():
     graph can be used to reason about 
     """
 
-    def __init__(self, problem: Problem, state: str, serial_planning=True):
+    def __init__(self, problem, state, serial_planning=True):
         """
         :param problem: PlanningProblem (or subclass such as AirCargoProblem or HaveCakeProblem)
         :param state: str (will be in form TFTTFF... representing fluent states)
@@ -311,6 +311,43 @@ class PlanningGraph():
         #   to see if a proposed PgNode_a has prenodes that are a subset of the previous S level.  Once an
         #   action node is added, it MUST be connected to the S node instances in the appropriate s_level set.
 
+        # Finding the states at the level
+        literals = self.s_levels[level]
+
+        # Adding action nodes to the list as a set to avoide double counting
+        self.a_levels.append(set())
+
+        # List of possible actions
+        possible_actions = self.all_actions
+
+        # Now, find all actions that their precondition can be met by the literal
+        for literal in literals:
+            for action in possible_actions:
+                # If the literal is positive and it is present
+                # in an action positive precondition
+                # then a possible action
+                if literal.is_pos:
+                    if literal.symbol in action.precond_pos:
+                        # Create an action node
+                        action_node = PgNode_a(action)
+                        # Keeping track child/parent -- Connecting
+                        literal.children.add(action_node)
+                        action_node.parents.add(literal)
+                        self.a_levels[level].add(action_node)
+                else:
+                    # If the literal is negative and it is present
+                    # in an action negative precondition
+                    # then a possible action
+                    if literal.symbol in action.precond_neg:
+                        # Create an action node
+                        action_node = PgNode_a(action)
+                        # Keeping track child/parent -- Connecting
+                        literal.children.add(action_node)
+                        action_node.parents.add(literal)
+                        self.a_levels[level].add(action_node)
+
+
+
     def add_literal_level(self, level):
         """ add an S (literal) level to the Planning Graph
 
@@ -353,7 +390,7 @@ class PlanningGraph():
                         self.competing_needs_mutex(n1, n2)):
                     mutexify(n1, n2)
 
-    def serialize_actions(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
+    def serialize_actions(self, node_a1, node_a2):
         """
         Test a pair of actions for mutual exclusion, returning True if the
         planning graph is serial, and if either action is persistent; otherwise
@@ -371,7 +408,7 @@ class PlanningGraph():
             return False
         return True
 
-    def inconsistent_effects_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
+    def inconsistent_effects_mutex(self, node_a1, node_a2):
         """
         Test a pair of actions for inconsistent effects, returning True if
         one action negates an effect of the other, and False otherwise.
@@ -388,7 +425,7 @@ class PlanningGraph():
         # TODO test for Inconsistent Effects between nodes
         return False
 
-    def interference_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
+    def interference_mutex(self, node_a1, node_a2):
         """
         Test a pair of actions for mutual exclusion, returning True if the 
         effect of one action is the negation of a precondition of the other.
@@ -405,7 +442,7 @@ class PlanningGraph():
         # TODO test for Interference between nodes
         return False
 
-    def competing_needs_mutex(self, node_a1: PgNode_a, node_a2: PgNode_a) -> bool:
+    def competing_needs_mutex(self, node_a1, node_a2):
         """
         Test a pair of actions for mutual exclusion, returning True if one of
         the precondition of one action is mutex with a precondition of the
@@ -419,7 +456,7 @@ class PlanningGraph():
         # TODO test for Competing Needs between nodes
         return False
 
-    def update_s_mutex(self, nodeset: set):
+    def update_s_mutex(self, nodeset):
         """ Determine and update sibling mutual exclusion for S-level nodes
 
         Mutex action tests section from 3rd Ed. 10.3 or 2nd Ed. 11.4
@@ -438,7 +475,7 @@ class PlanningGraph():
                 if self.negation_mutex(n1, n2) or self.inconsistent_support_mutex(n1, n2):
                     mutexify(n1, n2)
 
-    def negation_mutex(self, node_s1: PgNode_s, node_s2: PgNode_s) -> bool:
+    def negation_mutex(self, node_s1, node_s2):
         """
         Test a pair of state literals for mutual exclusion, returning True if
         one node is the negation of the other, and False otherwise.
@@ -454,7 +491,7 @@ class PlanningGraph():
         # TODO test for negation between nodes
         return False
 
-    def inconsistent_support_mutex(self, node_s1: PgNode_s, node_s2: PgNode_s):
+    def inconsistent_support_mutex(self, node_s1, node_s2):
         """
         Test a pair of state literals for mutual exclusion, returning True if
         there are no actions that could achieve the two literals at the same
@@ -473,7 +510,7 @@ class PlanningGraph():
         # TODO test for Inconsistent Support between nodes
         return False
 
-    def h_levelsum(self) -> int:
+    def h_levelsum(self):
         """The sum of the level costs of the individual goals (admissible if goals independent)
 
         :return: int
