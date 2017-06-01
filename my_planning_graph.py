@@ -366,6 +366,20 @@ class PlanningGraph():
         #   all of the new S nodes as children of all the A nodes that could produce them, and likewise add the A nodes to the
         #   parent sets of the S nodes
 
+        # Finding the action at the previous level
+        actions = self.a_levels[level - 1]
+
+        # Adding states nodes to the list as a set to avoide double counting
+        self.s_levels.append(set())
+
+        # Now, find all literal that their precondition can be met by the literal
+        for action in actions:
+            for literal in action.effnodes:
+                # Keeping track child/parent -- Connecting
+                literal.parents.add(action)
+                action.children.add(literal)
+                self.s_levels[level].add(literal)
+
     def update_a_mutex(self, nodeset):
         """ Determine and update sibling mutual exclusion for A-level nodes
 
