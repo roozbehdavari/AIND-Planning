@@ -483,9 +483,13 @@ class PlanningGraph():
         """
 
         # TODO test for Competing Needs between nodes
+        # A mutex relation holds between two literals at the same
+        # level if one is the negation of the other or if each
+        # possible pair of actions that could achieve the two literals is mutually exclusive.
+
         for s1 in node_a1.prenodes:
             for s2 in node_a2.prenodes:
-                if self.negation_mutex(s1, s2):
+                if self.negation_mutex(s1, s2) or self.inconsistent_support_mutex(s1, s2):
                     return True
 
         return False
@@ -554,6 +558,9 @@ class PlanningGraph():
             for a2 in actions2:
                 if not a1.is_mutex(a2):
                     return False
+
+        if self.negation_mutex(node_s1, node_s2):
+            return True
 
         return True
 
