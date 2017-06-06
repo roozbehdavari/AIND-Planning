@@ -487,9 +487,9 @@ class PlanningGraph():
         # level if one is the negation of the other or if each
         # possible pair of actions that could achieve the two literals is mutually exclusive.
 
-        for s1 in node_a1.prenodes:
-            for s2 in node_a2.prenodes:
-                if self.negation_mutex(s1, s2) or self.inconsistent_support_mutex(s1, s2):
+        for s1 in node_a1.parents:
+            for s2 in node_a2.parents:
+                if s1.is_mutex(s2):
                     return True
 
         return False
