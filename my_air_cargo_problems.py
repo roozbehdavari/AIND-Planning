@@ -230,12 +230,13 @@ class AirCargoProblem(Problem):
         """
         # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
         count = 0
-        pg = PlanningGraph(self, node.state)
 
-        for g in pg.problem.goal:
-            count += 1
-
+        for i, fluent in enumerate(self.state_map):
+            if fluent in self.goal:
+                if node.state[i] == 'F':
+                    count += 1
         return count
+
 
 
 def air_cargo_p1():
